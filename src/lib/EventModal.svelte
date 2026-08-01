@@ -11,6 +11,7 @@
   let end = $state(event?.end ?? defaultDate ?? todayStr());
   let saving = $state(false);
   let err = $state("");
+  let confirmingDelete = $state(false);
 
   // Keep end >= start automatically.
   $effect(() => {
@@ -36,7 +37,6 @@
   }
 
   async function remove() {
-    if (!confirm(`Delete ${event.person}'s trip?`)) return;
     saving = true;
     try {
       await deleteEvent(event.id);
@@ -44,6 +44,7 @@
     } catch (e) {
       err = e.message;
       saving = false;
+      confirmingDelete = false;
     }
   }
 
@@ -111,30 +112,50 @@
       {/if}
     </div>
 
-    <div class="mt-6 flex items-center gap-3">
-      {#if editing}
+    {#if confirmingDelete}
+      <div class="mt-6 flex items-center gap-3">
+        <span class="mr-auto text-sm text-slate-600">Delete {event.person}'s trip?</span>
+        <button
+          onclick={() => (confirmingDelete = false)}
+          disabled={saving}
+          class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+        >
+          Keep
+        </button>
         <button
           onclick={remove}
           disabled={saving}
-          class="mr-auto rounded-lg px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+          class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
         >
-          Delete
+          {saving ? "Deleting…" : "Delete"}
         </button>
-      {/if}
-      <button
-        onclick={onClose}
-        disabled={saving}
-        class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 {editing ? '' : 'ml-auto'}"
-      >
-        Cancel
-      </button>
-      <button
-        onclick={save}
-        disabled={saving}
-        class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
-      >
-        {saving ? "Saving…" : editing ? "Save" : "Add trip"}
-      </button>
-    </div>
+      </div>
+    {:else}
+      <div class="mt-6 flex items-center gap-3">
+        {#if editing}
+          <button
+            onclick={() => (confirmingDelete = true)}
+            disabled={saving}
+            class="mr-auto rounded-lg px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+          >
+            Delete
+          </button>
+        {/if}
+        <button
+          onclick={onClose}
+          disabled={saving}
+          class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 {editing ? '' : 'ml-auto'}"
+        >
+          Cancel
+        </button>
+        <button
+          onclick={save}
+          disabled={saving}
+          class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+        >
+          {saving ? "Saving…" : editing ? "Save" : "Add trip"}
+        </button>
+      </div>
+    {/if}
   </div>
 </div>

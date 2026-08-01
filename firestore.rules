@@ -1,13 +1,11 @@
 rules_version = '2';
 
-// OOO Friend stores trips in a single "trips" collection.
-// This app has no authentication, so the rules below allow open
-// read/write to that collection only. If you later add Firebase Auth,
-// tighten these to `allow read, write: if request.auth != null;`.
+// OOO Friend stores each user's trips under users/{uid}/trips.
+// A signed-in user can only read and write their own trips.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /trips/{tripId} {
-      allow read, write: if true;
+    match /users/{uid}/trips/{tripId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
     match /{document=**} {
       allow read, write: if false;
